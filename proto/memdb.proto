@@ -1,0 +1,113 @@
+syntax = "proto3";
+
+package memdb.v1;
+
+option go_package = "github.com/akshaynavani/MemDB/api/memdbpb;memdbpb";
+
+// MemDB exposes the in-memory engine: named tables of byte-keyed entries.
+service MemDB {
+  rpc CreateTable(CreateTableRequest) returns (CreateTableResponse);
+  rpc DropTable(DropTableRequest) returns (DropTableResponse);
+  rpc ListTables(ListTablesRequest) returns (ListTablesResponse);
+
+  rpc Put(PutRequest) returns (PutResponse);
+  rpc Get(GetRequest) returns (GetResponse);
+  rpc Delete(DeleteRequest) returns (DeleteResponse);
+
+  // Scan streams entries in [start, end) in ascending key order.
+  rpc Scan(ScanRequest) returns (stream KeyValue);
+
+  // BatchPut writes all entries atomically with respect to readers of the
+  // table, or none of them if any entry is invalid.
+  rpc BatchPut(BatchPutRequest) returns (BatchPutResponse);
+
+  rpc Stats(StatsRequest) returns (StatsResponse);
+}
+
+message KeyValue {
+  bytes key = 1;
+  bytes value = 2;
+}
+
+message CreateTableRequest {
+  string name = 1;
+}
+message CreateTableResponse {}
+
+message DropTableRequest {
+  string name = 1;
+}
+message DropTableResponse {}
+
+message ListTablesRequest {}
+message ListTablesResponse {
+  repeated string names = 1;
+}
+
+message PutRequest {
+  string table = 1;
+  bytes key = 2;
+  bytes value = 3;
+}
+message PutResponse {
+  // True when an existing value was overwritten.
+  bool replaced = 1;
+}
+
+message GetRequest {
+  string table = 1;
+  bytes key = 2;
+}
+message GetResponse {
+  bool found = 1;
+  bytes value = 2;
+}
+
+message DeleteRequest {
+  string table = 1;
+  bytes key = 2;
+}
+message DeleteResponse {
+  bool deleted = 1;
+}
+
+message ScanRequest {
+  string table = 1;
+  // Inclusive lower bound; empty means the first key.
+  bytes start = 2;
+  // Exclusive upper bound; empty means no upper bound.
+  bytes end = 3;
+  // Maximum number of entries to return; 0 means unlimited.
+  uint32 limit = 4;
+}
+
+message BatchPutRequest {
+  string table = 1;
+  repeated KeyValue entries = 2;
+}
+message BatchPutResponse {
+  // Number of keys that did not exist before the batch.
+  uint32 inserted = 1;
+}
+
+message StatsRequest {
+  // Table to report on; empty reports every table.
+  string table = 1;
+}
+
+message TableStats {
+  string name = 1;
+  uint64 keys = 2;
+  uint32 height = 3;
+  uint32 order = 4;
+  uint64 puts = 5;
+  uint64 gets = 6;
+  uint64 hits = 7;
+  uint64 deletes = 8;
+  uint64 scans = 9;
+  uint64 batches = 10;
+}
+
+message StatsResponse {
+  repeated TableStats tables = 1;
+}
