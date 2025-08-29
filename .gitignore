@@ -1,0 +1,18 @@
+# Build output
+/bin/
+
+# Generated protobuf/gRPC code (run `make proto`)
+/api/memdbpb/
+
+# Profiling and benchmark artefacts
+/profiles/
+*.out
+*.test
+*.prof
+trace.out
+
+# Editors / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
